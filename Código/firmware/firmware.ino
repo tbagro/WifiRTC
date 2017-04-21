@@ -1,6 +1,6 @@
 #include <ESP8266WiFi.h>  //https://github.com/ekstrand/ESP8266wifi
 #include <WiFiUdp.h>
-//#include <WiFiManager.h>  //https://github.com/tzapu/WiFiManager
+#include <WiFiManager.h>  //https://github.com/tzapu/WiFiManager
 #include <TimeLib.h>      //https://github.com/PaulStoffregen/Time
 #include <Ticker.h>
 #include <EEPROM.h>
@@ -8,14 +8,14 @@
 
 //******************** Configurações Gerais *******************//
 
-const char* ssid = "SSID";
-const char* password = "SENHA";
+//const char* ssid = "SSID";
+//const char* password = "SENHA";
 
 WiFiServer server(80);
 Ticker secondtick;
 volatile int watchdogCount = 0;
 
-int Relay = 5;                // Pino Utilizado
+int Relay = 5;                // Pino Utilizado para o rele
 uint8_t status_gpio = 0;      // Define condição para GPIO
 uint8_t status_auto;          // Define status do botão auto
 boolean stateRelay;           // Estado do pino Relay
@@ -186,6 +186,7 @@ void webpage() {
   while (!client.available()) {
     delay(1);
   }
+ 
   Serial.println (F("*WifiRTC: Nova conexao OK..."));
   String req = client.readStringUntil('\r');  //Le a string enviada pelo cliente
   Serial.println(req);                        //Mostra a string enviada
@@ -193,6 +194,7 @@ void webpage() {
 
   if (req.indexOf(F("Auto_on")) != -1) {
     status_auto = true;
+    TimedAction(); // checa os parametros do relay modo auto
   } else if (req.indexOf(F("Auto_off")) != -1) {
     status_auto = false;
   } else if (req.indexOf(F("setHLu")) != -1) {
@@ -274,11 +276,11 @@ void webpage() {
   buf += "<h4>Lampada</h4>";
   buf += "<div class='btn-group'>";
   //verificar como deixar automatico envia o comando
-  if (status_auto)  // alterna botões on off
-    buf += "<a href=\"?function=Auto_off\" class='btn btn-success'>Auto <i class=\"fa fa-toggle-on\" aria-hidden=\"true\"></i></a>";
+  i  if (status_auto)  // alterna botões on off
+    buf += "<a href=\"?function=Auto_off\" class='btn btn-primary'>Auto <i class=\"fa fa-toggle-oon\" aria-hidden=\"true\"></i></a>";
   else
-    buf += "<a href=\"?function=Auto_on\" class='btn btn-primary'>Auto <i class=\"fa fa-toggle-off\" aria-hidden=\"true\"></i></a>";
-  //De acordo com o status da GPIO
+    buf += "<a href=\"?function=Auto_on\" class='btn btn-success'>Auto <i class=\"fa fa-toggle-off\" aria-hidden=\"true\"></i></a>";
+ //De acordo com o status da GPIO
   if (status_gpio)
     buf += "<a href=\"?function=rele_off\" class='btn btn-danger'><i class=\"fa fa-power-off\" aria-hidden=\"true\"></i> Desligar</a>";
   else
@@ -332,7 +334,7 @@ void setup() {
   secondtick.attach(1, ISRWatchdog);
   
   //Define conexão direta
-  WiFi.begin(ssid, password);
+  //WiFi.begin(ssid, password);
   
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
